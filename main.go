@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+
+	"github.com/shutt90/email-notification/internal/params"
 )
 
 const (
@@ -14,11 +16,6 @@ const (
 var (
 	ErrUnknownAddress = fmt.Errorf("Error Unknown SMTP Address")
 )
-
-type acceptedQueryParams struct {
-	email string
-	id    uuid.UUID
-}
 
 type cfg struct {
 	Address      string `json:"smtpAddress"`
@@ -32,8 +29,8 @@ func main() {
 }
 
 func HandleRequest(w http.ResponseWriter, r *http.Request) {
-	params := &acceptedQueryParams{}
-	params.setEmail(r.URL.Query().Get("email"))
+	params := params.New()
+	params.SetEmail(r.URL.Query().Get("email"))
 	parsedId, err := uuid.Parse(r.URL.Query().Get("uuid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -42,23 +39,7 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params.setId(parsedId)
-}
-
-func (aqp *acceptedQueryParams) setEmail(email string) {
-	aqp.email = email
-}
-
-func (aqp *acceptedQueryParams) getEmail() string {
-	return aqp.email
-}
-
-func (aqp *acceptedQueryParams) setId(id uuid.UUID) {
-	aqp.id = id
-}
-
-func (aqp *acceptedQueryParams) getId() uuid.UUID {
-	return aqp.id
+	params.SetId(parsedId)
 }
 
 func (cfg *cfg) smtpAddress() error {
