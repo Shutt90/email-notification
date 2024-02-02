@@ -1,14 +1,30 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
 )
 
+const (
+	GoogleSMTPAddress = "smtp.gmail.com"
+)
+
+var (
+	ErrUnknownAddress = fmt.Errorf("Error Unknown SMTP Address")
+)
+
 type acceptedQueryParams struct {
 	email string
 	id    uuid.UUID
+}
+
+type cfg struct {
+	Address      string `json:"smtpAddress"`
+	Authenicated bool   `json:"authenticated"`
+	Username     string `json:"username"`
+	Password     string `json:"password"`
 }
 
 func main() {
@@ -43,4 +59,16 @@ func (aqp *acceptedQueryParams) setId(id uuid.UUID) {
 
 func (aqp *acceptedQueryParams) getId() uuid.UUID {
 	return aqp.id
+}
+
+func (cfg *cfg) smtpAddress() error {
+	switch cfg.Address {
+	case GoogleSMTPAddress:
+		cfg.Authenicated = true
+	default:
+		return ErrUnknownAddress
+	}
+
+	return nil
+
 }
