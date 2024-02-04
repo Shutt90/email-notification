@@ -8,6 +8,8 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+type DB *pgx.Conn
+
 func New(username, password, dbHost, table string, port int) *pgx.Conn {
 	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%d/%s?sslmode=verify-full", username, password, dbHost, port, table)
 	ctx := context.Background()

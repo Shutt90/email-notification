@@ -2,27 +2,27 @@ package params
 
 import "github.com/google/uuid"
 
-type acceptedQueryParams struct {
+type AcceptedQueryParams struct {
 	email string
 	id    uuid.UUID
 }
 
-func New() *acceptedQueryParams {
-	return &acceptedQueryParams{}
+func New() *AcceptedQueryParams {
+	return &AcceptedQueryParams{}
 }
 
-func (aqp *acceptedQueryParams) SetEmail(email string) {
+func (aqp *AcceptedQueryParams) SetEmail(email string) {
 	aqp.email = email
 }
 
-func (aqp *acceptedQueryParams) GetEmail() string {
+func (aqp *AcceptedQueryParams) GetEmail() string {
 	return aqp.email
 }
 
-func (aqp *acceptedQueryParams) SetId(id uuid.UUID) {
+func (aqp *AcceptedQueryParams) SetId(id uuid.UUID) {
 	aqp.id = id
 }
 
-func (aqp *acceptedQueryParams) GetId() uuid.UUID {
+func (aqp *AcceptedQueryParams) GetId() uuid.UUID {
 	return aqp.id
 }
