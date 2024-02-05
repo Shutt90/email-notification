@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/smtp"
 
@@ -14,6 +15,7 @@ import (
 )
 
 const (
+	PORT              = "9001"
 	GoogleSMTPAddress = "smtp.gmail.com"
 
 	VerifyUser = "Verify your Account Creation"
@@ -35,6 +37,10 @@ type cfg struct {
 
 func main() {
 	http.HandleFunc("/", HandleRequest)
+
+	if err := http.ListenAndServe(":"+PORT, nil); err != nil {
+		log.Fatal("unable to start server, error: ", err)
+	}
 }
 
 func HandleRequest(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +49,7 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 	parsedId, err := uuid.Parse(r.URL.Query().Get("uuid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("bad request"))
+		w.Write([]byte("bad request - missing required query params"))
 
 		return
 	}
@@ -54,7 +60,7 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 	bodyByte, err := io.ReadAll(r.Body)
 	if err := json.Unmarshal(bodyByte, &cfg); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("bad request"))
+		w.Write([]byte(fmt.Sprintf("bad request %s", err.Error())))
 
 		return
 	}
@@ -62,11 +68,19 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 	mailClient := mail.New("", cfg.Username, cfg.Password, cfg.Address)
 	msg := mail.BuildMessage(cfg.Recipients, fmt.Sprintf("%s:%d", cfg.Username, cfg.Port), VerifyUser, "verify your account creation by clicking the link")
 	if err := smtp.SendMail(fmt.Sprintf("%s:%d", cfg.Address, cfg.Port), mailClient.Auth, cfg.Username, cfg.Recipients, []byte(msg)); err != nil {
+		if err.Error() == "EOF" {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("user credentials incorrect"))
+
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("server error logged"))
+		w.Write([]byte(fmt.Sprintf("server error logged %s", err.Error())))
 
 		return
 	}
+
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func (cfg *cfg) smtpAddress() error {
