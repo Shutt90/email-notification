@@ -1,7 +1,6 @@
 package mail
 
 import (
-	"fmt"
 	"net/smtp"
 )
 
@@ -28,13 +27,10 @@ func BuildMessage(to []string, from, subject, body string) string {
 		toString += t + "; "
 	}
 
-	msg := fmt.Sprintf(`
-		From: %s \n"
-		To: %s\n
-		Subject: %s \n\n
-		%s`,
-		from, toString, subject, body,
-	)
+	msg := "From: " + from + "\n" +
+		toString + "\n" +
+		"Subject: " + subject + "\n\n" +
+		body
 
 	return msg
 }
