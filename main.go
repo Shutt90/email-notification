@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/smtp"
+	"os"
+	"text/template"
 
 	"github.com/google/uuid"
 
@@ -65,8 +68,21 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	html, err := os.ReadFile("/template/emailBody.html")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("unable to process at this time"))
+
+		return
+	}
+
+	tmpl := template.Must(template.New("emailNotification").Parse(string(html)))
+
+	buf := new(bytes.Buffer)
+	tmpl.Execute(buf, r)
+
 	mailClient := mail.New("", cfg.Username, cfg.Password, cfg.Address)
-	msg := mail.BuildMessage(cfg.Recipients, fmt.Sprintf("%s:%d", cfg.Username, cfg.Port), VerifyUser, "verify your account creation by clicking the link")
+	msg := mail.BuildMessage(cfg.Recipients, fmt.Sprintf("%s:%d", cfg.Username, cfg.Port), VerifyUser, buf.String())
 	if err := smtp.SendMail(fmt.Sprintf("%s:%d", cfg.Address, cfg.Port), mailClient.Auth, cfg.Username, cfg.Recipients, []byte(msg)); err != nil {
 		if err.Error() == "EOF" {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -90,7 +106,6 @@ func (cfg *cfg) smtpAddress() error {
 	default:
 		return ErrUnknownAddress
 	}
-
 	return nil
 
 }

@@ -21,7 +21,7 @@ func New(identity, username, password, host string) *Mail {
 	return s
 }
 
-func BuildMessage(to []string, from, subject, body string) string {
+func BuildMessage(to []string, from, subject, message string) string {
 	toString := "To: "
 	for _, t := range to {
 		toString += t + "; "
@@ -30,7 +30,7 @@ func BuildMessage(to []string, from, subject, body string) string {
 	msg := "From: " + from + "\n" +
 		toString + "\n" +
 		"Subject: " + subject + "\n\n" +
-		body
+		message
 
 	return msg
 }
