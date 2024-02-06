@@ -34,6 +34,7 @@ type cfg struct {
 	Username     string `json:"username"`
 	Password     string `json:"password"`
 	Port         uint   `json:"port"`
+	Href         string
 
 	Recipients []string `json:"recipients"`
 }
@@ -68,18 +69,20 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	html, err := os.ReadFile("/template/emailBody.html")
+	html, err := os.ReadFile("./template/emailBody.html")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("unable to process at this time"))
+		w.Write([]byte(fmt.Sprintf("unable to process at this time: %s", err.Error())))
 
 		return
 	}
 
 	tmpl := template.Must(template.New("emailNotification").Parse(string(html)))
 
+	cfg.Href = r.Host + "?" + params.GetId().String()
+
 	buf := new(bytes.Buffer)
-	tmpl.Execute(buf, r)
+	tmpl.Execute(buf, cfg)
 
 	mailClient := mail.New("", cfg.Username, cfg.Password, cfg.Address)
 	msg := mail.BuildMessage(cfg.Recipients, fmt.Sprintf("%s:%d", cfg.Username, cfg.Port), VerifyUser, buf.String())

@@ -2,6 +2,7 @@ package mail
 
 import (
 	"net/smtp"
+	"strings"
 )
 
 type Mail struct {
@@ -22,14 +23,10 @@ func New(identity, username, password, host string) *Mail {
 }
 
 func BuildMessage(to []string, from, subject, message string) string {
-	toString := "To: "
-	for _, t := range to {
-		toString += t + "; "
-	}
-
-	msg := "From: " + from + "\n" +
-		toString + "\n" +
-		"Subject: " + subject + "\n\n" +
+	msg := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\r\n" +
+		"From: " + from + "\n" +
+		strings.Join(to, ";") + "\n" +
+		"Subject: " + subject + "!\n" +
 		message
 
 	return msg
