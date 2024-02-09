@@ -41,6 +41,7 @@ type cfg struct {
 
 func main() {
 	http.HandleFunc("/", HandleRequest)
+	http.HandleFunc("/verify/", HandleVerification)
 
 	if err := http.ListenAndServe(":"+PORT, nil); err != nil {
 		log.Fatal("unable to start server, error: ", err)
@@ -100,6 +101,11 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusAccepted)
+}
+
+func HandleVerification(w http.ResponseWriter, r *http.Request) {
+	uuidOnRequest := r.URL.Query().Get("uuid")
+	email := r.URL.Query().Get("uuid")
 }
 
 func (cfg *cfg) smtpAddress() error {
