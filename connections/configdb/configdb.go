@@ -4,14 +4,22 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type db struct {
 	ctx  context.Context
-	conn *pgx.Conn
+	conn PgxConnectionIface
+}
+
+type PgxConnectionIface interface {
+	Begin(context.Context) (pgx.Tx, error)
+	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
+	Close(context.Context) error
 }
 
 var (
@@ -31,6 +39,20 @@ func New(username, password, dbHost, table string) *db {
 		ctx:  context.Background(),
 		conn: conn,
 	}
+}
+
+func (db *db) CreateTable() error {
+	f, err := os.ReadFile("../../sql/user.sql")
+	if err != nil {
+		return err
+	}
+
+	_, err = db.conn.Exec(db.ctx, string(f))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // TODO: refactor later into interface
