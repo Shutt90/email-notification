@@ -7,20 +7,12 @@ type AcceptedQueryParams struct {
 	id    uuid.UUID
 }
 
-func New() *AcceptedQueryParams {
+func New(email string, id uuid.UUID) *AcceptedQueryParams {
 	return &AcceptedQueryParams{}
-}
-
-func (aqp *AcceptedQueryParams) SetEmail(email string) {
-	aqp.email = email
 }
 
 func (aqp *AcceptedQueryParams) GetEmail() string {
 	return aqp.email
-}
-
-func (aqp *AcceptedQueryParams) SetId(id uuid.UUID) {
-	aqp.id = id
 }
 
 func (aqp *AcceptedQueryParams) GetId() uuid.UUID {

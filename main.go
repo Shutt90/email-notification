@@ -9,10 +9,13 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
+	"strconv"
 	"text/template"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 
+	"github.com/shutt90/email-notification/connections/configdb"
 	"github.com/shutt90/email-notification/internal/params"
 	mail "github.com/shutt90/email-notification/mailer"
 )
@@ -40,6 +43,8 @@ type cfg struct {
 }
 
 func main() {
+	godotenv.Load()
+
 	http.HandleFunc("/", HandleRequest)
 	http.HandleFunc("/verify/", HandleVerification)
 
@@ -49,17 +54,17 @@ func main() {
 }
 
 func HandleRequest(w http.ResponseWriter, r *http.Request) {
-	params := params.New()
-	params.SetEmail(r.URL.Query().Get("email"))
 	parsedId, err := uuid.Parse(r.URL.Query().Get("uuid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("bad request - missing required query params"))
+		w.Write([]byte("bad request - invalid uuid query param"))
 
 		return
 	}
-
-	params.SetId(parsedId)
+	params := params.New(
+		r.URL.Query().Get("email"),
+		parsedId,
+	)
 
 	cfg := cfg{}
 	bodyByte, err := io.ReadAll(r.Body)
@@ -104,8 +109,32 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleVerification(w http.ResponseWriter, r *http.Request) {
-	uuidOnRequest := r.URL.Query().Get("uuid")
-	email := r.URL.Query().Get("uuid")
+	parsedId, err := uuid.Parse(r.URL.Query().Get("uuid"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("bad request - invalid uuid query param"))
+
+		return
+	}
+	params := params.New(
+		r.URL.Query().Get("email"),
+		parsedId,
+	)
+
+	db := configdb.New(
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASS"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_TABLE"),
+	)
+
+	if err := db.AuthenticateUser(params.GetId(), params.GetEmail()); err != nil {
+		//log errors
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unable to authenticate this user"))
+
+		return
+	}
 }
 
 func (cfg *cfg) smtpAddress() error {
