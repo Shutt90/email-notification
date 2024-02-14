@@ -27,24 +27,11 @@ func (db *mockDb) Close(ctx context.Context) error {
 }
 
 func TestCreateTable(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	mockConn, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mock.Close()
-
-	mock.ExpectExec(`
-		CREATE TABLE IF NOT EXISTS user (
-		    id SERIAL PRIMARY KEY,
-		    email VARCHAR(255) NOT NULL DEFAULT '',
-		    uuid VARCHAR(255) NOT NULL DEFAULT '',
-		    authenticated BOOLEAN NOT NULL DEFAULT false,
-		    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-		    authenticated_at TIMESTAMPTZ DEFAULT NULL
-		)`,
-	)
-
-	mockConn, _ := pgxmock.NewConn()
+	defer mockConn.Close(context.Background())
 
 	mockClient := &db{
 		context.Background(),
@@ -54,5 +41,16 @@ func TestCreateTable(t *testing.T) {
 	if err := mockClient.CreateTable(); err != nil {
 		t.Fatal(err)
 	}
+
+	mockConn.ExpectExec(`
+		CREATE TABLE IF NOT EXISTS user (
+		    id SERIAL PRIMARY KEY,
+		    email VARCHAR(255) NOT NULL DEFAULT '',
+		    uuid VARCHAR(255) NOT NULL DEFAULT '',
+		    authenticated BOOLEAN NOT NULL DEFAULT false,
+		    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+		    authenticated_at TIMESTAMPTZ DEFAULT NULL
+		)`,
+	)
 
 }

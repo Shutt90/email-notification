@@ -39,6 +39,7 @@ func New(username, password, dbHost, table string) *db {
 		ctx:  context.Background(),
 		conn: conn,
 	}
+
 }
 
 func (db *db) CreateTable() error {

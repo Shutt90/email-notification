@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
-	"strconv"
 	"text/template"
 
 	"github.com/google/uuid"
