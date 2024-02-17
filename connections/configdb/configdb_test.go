@@ -2,6 +2,7 @@ package configdb
 
 import (
 	"context"
+	"regexp"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
@@ -38,11 +39,9 @@ func TestCreateTable(t *testing.T) {
 		mockConn,
 	}
 
-	if err := mockClient.CreateTable(); err != nil {
-		t.Fatal(err)
-	}
+	mockConn.ExpectBeginTx(pgx.TxOptions{})
 
-	mockConn.ExpectExec(`
+	mockConn.ExpectExec(regexp.QuoteMeta(`
 		CREATE TABLE IF NOT EXISTS user (
 		    id SERIAL PRIMARY KEY,
 		    email VARCHAR(255) NOT NULL DEFAULT '',
@@ -50,7 +49,11 @@ func TestCreateTable(t *testing.T) {
 		    authenticated BOOLEAN NOT NULL DEFAULT false,
 		    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 		    authenticated_at TIMESTAMPTZ DEFAULT NULL
-		)`,
-	)
+		)`),
+	).WillReturnResult(pgxmock.NewResult("CREATE TABLE", 0))
+
+	if err := mockClient.CreateTable(); err != nil {
+		t.Fatal(err)
+	}
 
 }

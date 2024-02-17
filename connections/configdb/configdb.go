@@ -43,12 +43,18 @@ func New(username, password, dbHost, table string) *db {
 }
 
 func (db *db) CreateTable() error {
+	tx, err := db.conn.Begin(db.ctx)
+	if err != nil {
+		return err
+	}
+	defer db.conn.Close(db.ctx)
+
 	f, err := os.ReadFile("../../sql/user.sql")
 	if err != nil {
 		return err
 	}
 
-	_, err = db.conn.Exec(db.ctx, string(f))
+	_, err = tx.Exec(db.ctx, string(f))
 	if err != nil {
 		return err
 	}
