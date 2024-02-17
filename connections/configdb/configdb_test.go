@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pashagolub/pgxmock/v3"
@@ -50,10 +51,49 @@ func TestCreateTable(t *testing.T) {
 		    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 		    authenticated_at TIMESTAMPTZ DEFAULT NULL
 		)`),
-	).WillReturnResult(pgxmock.NewResult("CREATE TABLE", 0))
+	).WillReturnResult(pgxmock.NewResult("CREATE", 0))
+
+	mockConn.ExpectCommit()
 
 	if err := mockClient.CreateTable(); err != nil {
 		t.Fatal(err)
 	}
 
+	if err := mockConn.ExpectationsWereMet(); err != nil {
+		t.Fatal(err)
+	}
+
+}
+
+func TestAuthenticateUser(t *testing.T) {
+	mockConn, err := pgxmock.NewConn()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockConn.Close(context.Background())
+
+	mockClient := &db{
+		context.Background(),
+		mockConn,
+	}
+
+	id := uuid.New()
+	email := "test@example.com"
+
+	mockConn.ExpectBeginTx(pgx.TxOptions{})
+
+	mockConn.ExpectExec(regexp.QuoteMeta(`
+			UPDATE user SET authenticated = TRUE WHERE uuid = $1 AND email = $2 AND authenticated = FALSE
+		`),
+	).WithArgs(id, email).WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+
+	mockConn.ExpectCommit()
+
+	if err := mockClient.AuthenticateUser(id, email); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := mockConn.ExpectationsWereMet(); err != nil {
+		t.Fatal(err)
+	}
 }

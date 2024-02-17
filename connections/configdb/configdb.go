@@ -23,7 +23,8 @@ type PgxConnectionIface interface {
 }
 
 var (
-	ErrTooManyRows = fmt.Errorf("rows effected were more than expected")
+	ErrTooManyRows  = fmt.Errorf("rows effected were more than expected")
+	ErrUpdateFailed = fmt.Errorf("update failed")
 )
 
 func New(username, password, dbHost, table string) *db {
@@ -51,32 +52,52 @@ func (db *db) CreateTable() error {
 
 	f, err := os.ReadFile("../../sql/user.sql")
 	if err != nil {
+		tx.Rollback(db.ctx)
+
 		return err
 	}
 
 	_, err = tx.Exec(db.ctx, string(f))
 	if err != nil {
+		tx.Rollback(db.ctx)
+
 		return err
 	}
+
+	tx.Commit(db.ctx)
 
 	return nil
 }
 
-// TODO: refactor later into interface
 func (db *db) AuthenticateUser(id uuid.UUID, email string) error {
+	tx, err := db.conn.Begin(db.ctx)
+	if err != nil {
+		return err
+	}
+	defer db.conn.Close(db.ctx)
+
 	query := fmt.Sprintf("UPDATE user SET authenticated = TRUE WHERE uuid = $1 AND email = $2 AND authenticated = FALSE")
 
-	tag, err := db.conn.Exec(db.ctx, query, id, email)
+	tag, err := tx.Exec(db.ctx, query, id, email)
 	if err != nil {
-		// TODO: setup logger
-		fmt.Println(err)
+		tx.Rollback(db.ctx)
 
 		return err
 	}
 
 	if tag.RowsAffected() != 1 {
+		tx.Rollback(db.ctx)
+
 		return ErrTooManyRows
 	}
+
+	if tag.RowsAffected() == 0 {
+		tx.Rollback(db.ctx)
+
+		return ErrUpdateFailed
+	}
+
+	tx.Commit(db.ctx)
 
 	return nil
 }
