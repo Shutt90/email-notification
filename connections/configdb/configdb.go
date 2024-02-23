@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/shutt90/email-notification/models"
 )
 
 type db struct {
@@ -67,6 +68,11 @@ func (db *db) CreateTable() error {
 	tx.Commit(db.ctx)
 
 	return nil
+}
+
+func (db *db) CreateUser(user models.User) error {
+	db.conn.Exec(db.ctx, "INSERT INTO user (email, uuid) VALUES ($1, $2)", user.Email, user.U)
+
 }
 
 func (db *db) AuthenticateUser(id uuid.UUID, email string) error {
