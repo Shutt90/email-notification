@@ -4,24 +4,24 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	databaserepo "github.com/shutt90/email-notification/internal/repositories/database"
+	"github.com/shutt90/email-notification/internal/core/domain"
 	"github.com/shutt90/email-notification/internal/repositories/ports"
 )
 
 type service struct {
 	user ports.UserRepo
-	db   databaserepo.PgxConnectionIface
+	db   ports.UserService
 }
 
-func New(user ports.UserRepo, db databaserepo.PgxConnectionIface) *service {
+func New(user ports.UserRepo, db ports.UserService) *service {
 	return &service{
 		user: user,
 		db:   db,
 	}
 }
 
-func (svc *service) CreateUser(user ports.UserRepo) error {
-	svc.db.Exec(svc.user.ctx, "INSERT INTO user (email, uuid) VALUES ($1, $2)", user.Email, user.U)
+func (svc *service) CreateUser(user domain.User) error {
+	svc.user.Exec(svc.db.GetContext(), "INSERT INTO user (email, uuid) VALUES ($1, $2)", user.Email, user.UUID)
 }
 
 func (svc *service) AuthenticateUser(id uuid.UUID, email string) error {

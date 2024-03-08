@@ -1,4 +1,4 @@
-package databaserepo
+package configdbrepo
 
 import (
 	"context"
@@ -8,18 +8,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/shutt90/email-notification/internal/core/domain"
+	"github.com/shutt90/email-notification/internal/repositories/ports"
 )
 
 type db struct {
-	Ctx  context.Context
-	Conn PgxConnectionIface
-}
-
-type PgxConnectionIface interface {
-	Begin(context.Context) (pgx.Tx, error)
-	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
-	Close(context.Context) error
+	ctx  context.Context
+	conn ports.UserRepo
 }
 
 var (
@@ -40,7 +35,10 @@ func New(username, password, dbHost, table string) *db {
 		ctx:  context.Background(),
 		conn: conn,
 	}
+}
 
+func (db *db) GetContext() context.Context {
+	return db.ctx
 }
 
 func (db *db) CreateTable(filepath string) error {
@@ -69,9 +67,13 @@ func (db *db) CreateTable(filepath string) error {
 	return nil
 }
 
-func (db *db) CreateUser(user models.User) error {
-	db.conn.Exec(db.ctx, "INSERT INTO user (email, uuid) VALUES ($1, $2)", user.Email, user.U)
+func (db *db) CreateUser(user domain.User) error {
+	_, err := db.conn.Exec(db.ctx, "INSERT INTO user (email, uuid) VALUES ($1, $2)", user.Email, user.UUID)
+	if err != nil {
+		return err
+	}
 
+	return nil
 }
 
 func (db *db) AuthenticateUser(id uuid.UUID, email string) error {

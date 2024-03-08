@@ -1,4 +1,4 @@
-package databaserepo
+package configdbrepo
 
 import (
 	"context"
@@ -7,25 +7,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pashagolub/pgxmock/v3"
+	"github.com/shutt90/email-notification/internal/repositories/ports"
 )
 
 type mockDb struct {
 	ctx  context.Context
-	conn PgxConnectionIface
-}
-
-func (db *mockDb) Begin(ctx context.Context) (pgx.Tx, error) {
-	return db.conn.Begin(ctx)
-}
-
-func (db *mockDb) Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error) {
-	return db.conn.Exec(ctx, sql, arguments)
-}
-
-func (db *mockDb) Close(ctx context.Context) error {
-	return db.conn.Close(ctx)
+	conn ports.UserRepo
 }
 
 func TestCreateTable(t *testing.T) {
