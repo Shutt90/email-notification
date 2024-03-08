@@ -1,10 +1,7 @@
 package domain
 
 import (
-	"database/sql"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type User struct {

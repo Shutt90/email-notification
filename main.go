@@ -14,8 +14,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 
-	"github.com/shutt90/email-notification/connections/configdb"
 	"github.com/shutt90/email-notification/internal/params"
+	databaserepo "github.com/shutt90/email-notification/internal/repositories/database"
 	mail "github.com/shutt90/email-notification/mailer"
 )
 
@@ -120,7 +120,7 @@ func HandleVerification(w http.ResponseWriter, r *http.Request) {
 		parsedId,
 	)
 
-	db := configdb.New(
+	db := databaserepo.New(
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASS"),
 		os.Getenv("DB_HOST"),

@@ -1,4 +1,4 @@
-package configdb
+package databaserepo
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package configdb
+package databaserepo
 
 import (
 	"context"
@@ -9,12 +9,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/shutt90/email-notification/models"
 )
 
 type db struct {
-	ctx  context.Context
-	conn PgxConnectionIface
+	Ctx  context.Context
+	Conn PgxConnectionIface
 }
 
 type PgxConnectionIface interface {
