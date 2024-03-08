@@ -44,14 +44,14 @@ func New(username, password, dbHost, table string) *db {
 
 }
 
-func (db *db) CreateTable() error {
+func (db *db) CreateTable(filepath string) error {
 	tx, err := db.conn.Begin(db.ctx)
 	if err != nil {
 		return err
 	}
 	defer db.conn.Close(db.ctx)
 
-	f, err := os.ReadFile("../../sql/user.sql")
+	f, err := os.ReadFile(filepath)
 	if err != nil {
 		tx.Rollback(db.ctx)
 

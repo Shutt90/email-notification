@@ -50,12 +50,12 @@ func TestCreateTable(t *testing.T) {
 		    authenticated BOOLEAN NOT NULL DEFAULT false,
 		    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 		    authenticated_at TIMESTAMPTZ DEFAULT NULL
-		)`),
+		);`),
 	).WillReturnResult(pgxmock.NewResult("CREATE", 0))
 
 	mockConn.ExpectCommit()
 
-	if err := mockClient.CreateTable(); err != nil {
+	if err := mockClient.CreateTable("../../sql/user.sql"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -83,7 +83,7 @@ func TestAuthenticateUser(t *testing.T) {
 	mockConn.ExpectBeginTx(pgx.TxOptions{})
 
 	mockConn.ExpectExec(regexp.QuoteMeta(`
-			UPDATE user SET authenticated = TRUE WHERE uuid = $1 AND email = $2 AND authenticated = FALSE
+			UPDATE user SET authenticated = TRUE WHERE uuid = $1 AND email = $2 AND authenticated = FALSE;
 		`),
 	).WithArgs(id, email).WillReturnResult(pgxmock.NewResult("UPDATE", 1))
 
