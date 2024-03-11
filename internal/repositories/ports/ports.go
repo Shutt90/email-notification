@@ -12,3 +12,7 @@ type UserRepo interface {
 	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
 	Close(context.Context) error
 }
+
+type UUID interface {
+	String()
+}
